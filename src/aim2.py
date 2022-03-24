@@ -11,6 +11,8 @@ class aim:
     def __init__(self):
         rospy.init_node('move_arm',anonymous=True)
         self.rate = rospy.Rate(10)
+        self.jointpub = rospy.Publisher('joint_trajectory_point',Float64MultiArray, queue_size =10)    
+        self.joint_pos = Float64MultiArray() 
         rospy.Subscriber("ball_position", Float64MultiArray, self.ball_callback)
 
     def joint_callback(self,data): 
@@ -29,11 +31,11 @@ class aim:
         camera_to_frame_z = -0.1
 
         x = data.data[0] + camera_to_frame_x
-        y = data.data[1]
+        y = -data.data[1]
         z = data.data[2] + camera_to_frame_x
 
         ball_position = (x,y,z)
-        print(ball_position)
+        #print(ball_position)
         self.move_arm(ball_position)
 
     # if camera is mounted on turret
@@ -79,7 +81,7 @@ class aim:
         base_angle = math.atan2(y,x)
 
         # velocity of ejection
-        v = 100
+        v = 5
         # gravity constant
         g = 9.81
         # displacement horizontal
@@ -105,18 +107,19 @@ class aim:
     
     # publishes a set of joint commands to the 'joint_trajectory_point' topic
     def move_arm(self,target_coordinate):
-        jointpub = rospy.Publisher('joint_trajectory_point',Float64MultiArray, queue_size =10)    
-        joint_pos = Float64MultiArray() 
-        
         #Joint Position vector should contain 6 elements:
         #[0, shoulder1, shoulder2, elbow, wrist, gripper]
 
         angles = self.calculate_angles(target_coordinate)
         base_angle = angles[0]
         turret_angle = angles[1]
+        #print("angles",angles)
+        #print(base_angle)
+        #print(turret_angle)
 
-        joint_pos.data = self.clean_joint_states([0, base_angle, 1.57, -1.47, turret_angle, 0])
-        jointpub.publish(joint_pos) 
+        self.joint_pos.data = self.clean_joint_states([0, base_angle, 1.57, -1.47, turret_angle, 0])
+        #print("joint pos data", self.joint_pos.data)
+        self.jointpub.publish(self.joint_pos)
         self.read_joint_states()
 
  

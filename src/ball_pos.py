@@ -40,8 +40,8 @@ class ball_pos:
         
         #green_lower = np.array([25, 52, 72])
         #green_higher = np.array([102,255,255])
-        blue_lower = np.array([94, 80, 2])
-        blue_higher = np.array([126,255,255])
+        blue_lower = np.array([110, 0, 50])
+        blue_higher = np.array([120,255,255])
         
         mask = cv2.inRange(hsv_frame, blue_lower, blue_higher) 
         _,contours, heirarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
@@ -55,7 +55,7 @@ class ball_pos:
         for contour in contours:
             area = cv2.contourArea(contour)
             
-            if area > 4000:
+            if area > 750:
                 M = cv2.moments(contour)
                 cX = int(M["m10"] / M["m00"])
                 cY = int(M["m01"] / M["m00"])
@@ -64,8 +64,8 @@ class ball_pos:
 
                 change_x = cX - frame_center_x 
                 change_y = frame_center_y - cY
-                print(change_x, change_y)
-                print(area)
+                #print(change_x, change_y)
+                #print(area)
                 dCoord = self.to3D(change_x,change_y,area)
 
                 dCoordMsg = Float64MultiArray()
@@ -75,10 +75,12 @@ class ball_pos:
                 self.pub.publish(dCoordMsg)
 
 
-                print("3D Coords")
-                print(dCoord[0])
-                print(dCoord[1])
-                print(dCoord[2])
+                #print("3D Coords")
+                #print(dCoord[0])
+                #print(dCoord[1])
+                #print(dCoord[2])
+        #cv2.imshow("Frame2", frame)
+        #cv2.imshow("mask", mask)
         #print("pub called")
         self.rate.sleep()
 
@@ -87,8 +89,12 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
         try:
             b.publish()
+            k = cv2.waitKey(25)
+            if k == 27:
+                break
         except rospy.ROSInterruptException:
             pass
+    
     cv2.destroyAllWindows()
 
 

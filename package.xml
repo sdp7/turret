@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>group07_arm</name>
-  <version>0.0.0</version>
-  <description>The group07_arm package</description>
+  <name>turret</name>
+  <version>1.1.0</version>
+  <description>The group07_arm/turret package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
