@@ -22,13 +22,13 @@ def ball_callback(data):
     camera_to_frame_x = 0.07
     camera_to_frame_z = -0.1
 
-    x = data[0] + camera_to_frame_x
-    y = data[1]
-    z = data[2] + camera_to_frame_x
+    x = data.data[0] + camera_to_frame_x
+    y = data.data[1]
+    z = data.data[2] + camera_to_frame_x
 
     ball_position = (x,y,z)
-
-    return ball_position
+    print(ball_position)
+    move_arm(ball_position)
 
 # if camera is mounted on turret
 def turret_to_wheelbase_frame(angles, ball_position):
@@ -115,10 +115,8 @@ def move_arm(target_coordinate):
 #loops over the commands at 20Hz until shut down
 if __name__ == '__main__': 
     rospy.init_node('move_arm',anonymous=True)
-    position = rospy.Subscriber("ball_position", Float64MultiArray, ball_callback)
-    rospy.spin()
-    rate = rospy.Rate(20)
+    rate = rospy.Rate(1)
 
     while not rospy.is_shutdown():
-        move_arm(position[0], position[1], position[2])
+        rospy.Subscriber("ball_position", Float64MultiArray, ball_callback)
         rate.sleep()

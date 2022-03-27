@@ -15,18 +15,22 @@ def joint_callback(data):
 
     #theta1 = data.position[3]
     #theta2 = data.position[6]
-
     #return (theta1, theta2)
 
 def ball_callback(data):
-    x = data[0]
-    y = data[1]
-    z = data[2]
+
+    camera_to_frame_x = 0.07
+    camera_to_frame_z = -0.1
+
+    x = data.data[0] + camera_to_frame_x
+    y = data.data[1]
+    z = data.data[2] + camera_to_frame_x
 
     ball_position = (x,y,z)
+    print(ball_position)
+    move_arm(ball_position)
 
-    return ball_position
-
+# if camera is mounted on turret
 def turret_to_wheelbase_frame(angles, ball_position):
     theta1 = angles[0]
     theta2 = angles[1]
@@ -83,8 +87,7 @@ def calculate_angles(position):
  
 # listens to the "joint_states" topic and sends them to "joint_callback" for processing
 def read_joint_states(): 
-    rospy.Subscriber("joint_states",JointState,joint_callback) 
-    #rospy.Subscriber("ball_pos",Float64MultiArray,ball_callback) 
+    rospy.Subscriber("joint_states",JointState,joint_callback)  
  
 # Makes sure the joints do not go outside the joint limits/break the servos
 def clean_joint_states(data): 
@@ -102,34 +105,21 @@ def move_arm(target_coordinate):
 #   [0, shoulder1, shoulder2, elbow, wrist, gripper]
 
     angles = calculate_angles(target_coordinate)
-
     base_angle = angles[0]
     turret_angle = angles[1]
 
-    joint_pos.data = clean_joint_states([0, base_angle, 1.57, -1.47,turret_angle, 0])
+    joint_pos.data = clean_joint_states([0, base_angle, 1.57, -1.47, turret_angle, 0])
     jointpub.publish(joint_pos) 
     read_joint_states()
 
-def heart():
-    curve1 = [(x,math.sqrt(1-(abs(x)-1)**2)) for x in np.linspace(0,2,10)]
-    curve2 = [(x,math.acos(1-abs(x))-3.14) for x in np.linspace(2,-2, 20)]
-    curve3 = [(x,math.sqrt(1-(abs(x)-1)**2)) for x in np.linspace(-2,0,10)]
-    heart_curve = curve1 + curve2 + curve3
 
-    return heart_curve
+
+def subscriber():
+    rospy.init_node('move_arm',anonymous=True)
+    rate = rospy.Rate(10)
+    rospy.Subscriber("ball_position", Float64MultiArray, ball_callback)
+    rospy.spin() 
  
 #loops over the commands at 20Hz until shut down
 if __name__ == '__main__': 
-    rospy.init_node('move_arm',anonymous=True) 
-    rate = rospy.Rate(30)
-    i=0 
-    heart_curve = heart()
-    while not rospy.is_shutdown():
-
-        if i == len(heart_curve):
-            i = 0 
-        point = (0.6, heart_curve[i][0]/5, heart_curve[i][1]/5)
- 
-        move_arm(point)
-        i+=1
-        sleep(0.1)
+    subscriber()
