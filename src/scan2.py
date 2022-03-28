@@ -13,8 +13,8 @@ from time import time, sleep
 class scan:
     def __init__(self):
         rospy.init_node('scan_arm',anonymous=True)
-        self.rate = rospy.Rate(1)
-        self.intervals = 10
+        self.rate = rospy.Rate(10)
+        self.intervals = 20
         self.counter = 0
         self.trajectory = self.generate_trajectory()
         self.jointpub = rospy.Publisher('joint_trajectory_point',Float64MultiArray, queue_size =10)
@@ -56,8 +56,8 @@ class scan:
         return list(clean_upper)
 
     def generate_trajectory(self):
-        clockwise_scan = [math.pi*factor for factor in np.linspace(-1,1,self.intervals, endpoint = False)]
-        trajectory = clockwise_scan + clockwise_scan[::-1]
+        clockwise_scan = [math.pi*factor for factor in np.linspace(-1,1,self.intervals)]
+        trajectory = clockwise_scan.pop() + clockwise_scan[::-1].pop()
         return trajectory
 
     # publishes a set of joint commands to the 'joint_trajectory_point' topic
