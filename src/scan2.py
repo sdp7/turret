@@ -16,6 +16,7 @@ class scan:
         self.rate = rospy.Rate(10)
         self.intervals = 20
         self.counter = 0
+        self.half_scan_done = False
         self.trajectory = self.generate_trajectory()
         self.jointpub = rospy.Publisher('joint_trajectory_point',Float64MultiArray, queue_size =10)
         self.joint_pos = Float64MultiArray() 
@@ -33,12 +34,16 @@ class scan:
         i = int(self.intervals/2)
         half_scan = [math.pi*factor for factor in np.linspace(0,-1,int(self.intervals/2))]
         half_scan.pop()
+        print(half_scan)
         # scan half pi
-        for point in half_scan:
-            if not is_fire:
-                self.move_arm(point)
+        if not self.half_scan_done:
+            for i in range(len(half_scan)):
+                if not is_fire:
+                    self.move_arm(half_scan[i])
+                if i == len(half_scan)-1:
+                    self.half_scan_done = True
         # scan full circle
-        if not is_fire:
+        if not is_fire and self.half_scan_done:
             if self.counter == len(self.trajectory):
                 self.counter = 0
             self.move_arm(self.trajectory[self.counter])
@@ -58,7 +63,11 @@ class scan:
 
     def generate_trajectory(self):
         clockwise_scan = [math.pi*factor for factor in np.linspace(-1,1,self.intervals)]
-        trajectory = clockwise_scan.pop() + clockwise_scan[::-1].pop()
+        anti_clockwise = clockwise_scan[::-1]
+        clockwise_scan.pop()
+        anti_clockwise.pop()
+        trajectory = clockwise_scan + anti_clockwise
+        print(trajectory)
         return trajectory
 
     # publishes a set of joint commands to the 'joint_trajectory_point' topic
