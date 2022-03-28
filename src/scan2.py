@@ -30,6 +30,13 @@ class scan:
 
     def scan_callback(self,data):
         is_fire = data.data
+        i = self.intervals/2
+        # scan half pi
+        while not is_fire and i < self.intervals:
+            reverse_trajectory = self.trajectory[::-1]
+            self.move_arm(reverse_trajectory[i])
+            i += 1
+        # scan full circle
         if not is_fire:
             if self.counter == len(self.trajectory):
                 self.counter = 0
@@ -40,7 +47,7 @@ class scan:
     def read_joint_states(self): 
         rospy.Subscriber("joint_states",JointState, self.joint_callback)  
     
-    # Makes sure the joints do not go outside the joint limits/break the servos
+    # makes sure the joints do not go outside the joint limits/break the servos
     def clean_joint_states(self,data): 
         lower_limits = [0, -3.5, -1.57, -1.57, -1, -1] 
         upper_limits = [0,  3.5,  1.57,  1.57,  1.57, 1] 
@@ -49,7 +56,7 @@ class scan:
         return list(clean_upper)
 
     def generate_trajectory(self):
-        clockwise_scan = [math.pi*factor for factor in np.linspace(-1,1,self.intervals)]
+        clockwise_scan = [math.pi*factor for factor in np.linspace(-1,1,self.intervals, endpoint = False)]
         trajectory = clockwise_scan + clockwise_scan[::-1]
         return trajectory
 
@@ -72,4 +79,3 @@ if __name__ == '__main__':
             rospy.spin()
         except KeyboardInterrupt:
             print("Shutting down")
-
