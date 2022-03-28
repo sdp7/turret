@@ -30,12 +30,13 @@ class scan:
 
     def scan_callback(self,data):
         is_fire = data.data
-        i = self.intervals/2
+        i = int(self.intervals/2)
+        half_scan = [math.pi*factor for factor in np.linspace(0,-1,int(self.intervals/2))]
+        half_scan.pop()
         # scan half pi
-        while not is_fire and i < self.intervals:
-            reverse_trajectory = self.trajectory[::-1]
-            self.move_arm(reverse_trajectory[i])
-            i += 1
+        for point in half_scan:
+            if not is_fire:
+                self.move_arm(point)
         # scan full circle
         if not is_fire:
             if self.counter == len(self.trajectory):
