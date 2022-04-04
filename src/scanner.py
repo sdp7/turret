@@ -13,38 +13,61 @@ from time import time, sleep
 class scan:
     def __init__(self):
         rospy.init_node('scan_arm',anonymous=True)
-        self.rate = rospy.Rate(10)
-        self.intervals = 20
+        self.rate = rospy.Rate(50)
+        self.intervals = 40
         self.counter = 0
         self.half_scan_done = False
         self.trajectory = self.generate_trajectory()
         self.half_trajectory = self.generate_half_trajectory()
         self.jointpub = rospy.Publisher('joint_trajectory_point',Float64MultiArray, queue_size =10)
         self.joint_pos = Float64MultiArray() 
-        #rospy.Subscriber("fire_detection", Float64MultiArray, self.detect_callback)
-        rospy.Subscriber("fire_tester", Bool, self.scan_callback)
+        self.fire_sub = rospy.Subscriber("isFire", Float64MultiArray, self.detect_callback)
+        self.joint_sub = rospy.Subscriber("joint_states",JointState, self.joint_callback)  
+        # rospy.Subscriber("isFire", Bool, self.scan_callback)
 
     def joint_callback(self,data): 
-        print("Msg: {}".format(data.header.seq)) 
-        print("Wheel Positions:\n\tLeft: {0:.2f}rad\n\tRight: {0:.2f}rad\n\n".format(data.position[0],data.position[1])) 
-        print("Joint Positions:\n\tShoulder1: {0:.2f}rad\n\tShoulder2: {0:.2f}rad\n\tElbow: {0:.2f}rad\n\tWrist: {0:.2f}rad\n\n".format(data.position[2],data.position[3],data.position[4],data.position[5])) 
-        print("----------")
+        # print("Msg: {}".format(data.header.seq)) 
+        # print("Wheel Positions:\n\tLeft: {0:.2f}rad\n\tRight: {0:.2f}rad\n\n".format(data.position[0],data.position[1])) 
+        # print("Joint Positions:\n\tShoulder1: {0:.2f}rad\n\tShoulder2: {0:.2f}rad\n\tElbow: {0:.2f}rad\n\tWrist: {0:.2f}rad\n\n".format(data.position[2],data.position[3],data.position[4],data.position[5])) 
+        # print("----------")
+        self.move_arm()
+
+
+    def detect_callback(self, data):
+        is_fire = len(data.data)
+
+        if is_fire:
+            fire_x = data.data[0]
+            fire_y = data.data[0]
+            self.joint_pos = self.read_joint_states()
+            print(f'detect callback, found fire at {fire_x,fire_y}')
+            exit()
+
+        else:
+            print(f"detect callback, didn't find fire at")
+            self.scan_callback(data)
 
     def scan_callback(self,data):
-        is_fire = data.data
+        is_fire = len(data.data)
+        
         # scan half pi
         if not(self.half_scan_done or is_fire):
+            print(f'scan 1/2 pi')
             self.move_arm(self.half_trajectory[self.counter])
             self.counter += 1
             if self.counter == len(self.half_trajectory):
                 self.counter = 0
                 self.half_scan_done = True
+        
         # scan full circle
         if (not is_fire) and self.half_scan_done:
+            print(f'scan pi')
             if self.counter == len(self.trajectory):
                 self.counter = 0
             self.move_arm(self.trajectory[self.counter])
             self.counter += 1
+        rospy.sleep(0.05)
+
     
     # listens to the "joint_states" topic and sends them to "joint_callback" for processing
     def read_joint_states(self): 
