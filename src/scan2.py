@@ -12,7 +12,7 @@ from time import time, sleep
 # processes the data from the ROSTopic named "joint_states"
 class scan:
     def __init__(self):
-        rospy.init_node('scan_arm',anonymous=True)
+        rospy.init_node('scan2',anonymous=True)
         self.rate = rospy.Rate(10)
         self.intervals = 20
         self.counter = 0

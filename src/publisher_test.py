@@ -1,19 +1,28 @@
 #!/usr/bin/env python
 import rospy
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Float64MultiArray
 
-def talker():
-    pub = rospy.Publisher('fire_tester', Bool, queue_size=10)
-    rospy.init_node('publisher', anonymous=True)
-    rate = rospy.Rate(10)
-    while not rospy.is_shutdown():
-        fire = False
+class talker():
+    def __init__(self):
+        self.pub = rospy.Publisher('fire_tester', Float64MultiArray, queue_size=10)
+        self.rate = rospy.Rate(50)
+
+    def pub(self):
+        fire = Float64MultiArray
         rospy.loginfo(fire)
-        pub.publish(fire)
-        rate.sleep()
+        self.pub.publish(fire)
+        self.rate.sleep()
+
+def main():
+    rospy.init_node('publisher', anonymous=True)
+    t = talker()
+    while not rospy.is_shutdown():
+        try:
+            t.pub()
+        except rospy.ROSInterruptException:
+            break
+    print("Shutting down fake fire")
+
 
 if __name__ == '__main__':
-    try:
-        talker()
-    except rospy.ROSInterruptException:
-        pass
+    main()
