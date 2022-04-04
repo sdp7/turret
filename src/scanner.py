@@ -17,6 +17,7 @@ class scan:
         global r
         r = 50
         self.rate = rospy.Rate(r)
+        global sl
         sl = 1/r
         
         self.intervals = 40
@@ -32,13 +33,13 @@ class scan:
         self.fire_sub = message_filters.Subscriber("isFire", Float64MultiArray, queue_size=10)
         self.joint_sub = message_filters.Subscriber("joint_states", JointState, queue_size=10) 
 
-        sub_list = [self.joint_sub, self.fire_sub]
+        self.sub_list = [self.joint_sub, self.fire_sub]
 
-        # #synchronise topics for isFire and jointStates so we have the right joint angles when finding isFire, 
+        # synchronise topics for isFire and jointStates so we have the right joint angles when finding isFire, 
         # slop = delay in sec in messages is syncesd
-        self.joint_sync = message_filters.ApproximateTimeSynchronizer(sub_list, queue_size=10, slop = sl, allow_headerless=True)
+        self.joint_sync = message_filters.ApproximateTimeSynchronizer(self.sub_list, queue_size=10, slop = sl, allow_headerless=True)
         self.joint_sync.registerCallback(self.detect_callback)
-
+        
         # rospy.Subscriber("isFire", Bool, self.scan_callback)
 
     def joint_callback(self,data): 
@@ -55,7 +56,7 @@ class scan:
 
         is_fire = len(fire_data.data)
 
-        if is_fire:
+        if is_fire > 0:
             fire_x = fire_data.data[0]
             fire_y = fire_data.data[0]
             self.joint_pos = joint_data.data

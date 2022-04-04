@@ -14,15 +14,16 @@ class scan:
     def __init__(self):
         rospy.init_node('scan_arm',anonymous=True)
         self.rate = rospy.Rate(10)
-        self.intervals = 20
+        self.intervals = 50
         self.counter = 0
         self.half_scan_done = False
         self.trajectory = self.generate_trajectory()
         self.half_trajectory = self.generate_half_trajectory()
         self.jointpub = rospy.Publisher('joint_trajectory_point',Float64MultiArray, queue_size =10)
         self.joint_pos = Float64MultiArray() 
-        #rospy.Subscriber("fire_detection", Float64MultiArray, self.detect_callback)
-        rospy.Subscriber("fire_tester", Bool, self.scan_callback)
+        rospy.Subscriber("isFire", Float64MultiArray, self.scan_callback)
+        
+        #rospy.Subscriber("fire_tester", Bool, self.scan_callback)
 
     def joint_callback(self,data): 
         print("Msg: {}".format(data.header.seq)) 
@@ -30,8 +31,13 @@ class scan:
         print("Joint Positions:\n\tShoulder1: {0:.2f}rad\n\tShoulder2: {0:.2f}rad\n\tElbow: {0:.2f}rad\n\tWrist: {0:.2f}rad\n\n".format(data.position[2],data.position[3],data.position[4],data.position[5])) 
         print("----------")
 
-    def scan_callback(self,data):
-        is_fire = data.data
+    def scan_callback(self,fire_data):
+        if len(fire_data.data) == 0:
+            is_fire = False
+        else: 
+            is_fire = True
+            exit()
+
         # scan half pi
         if not(self.half_scan_done or is_fire):
             self.move_arm(self.half_trajectory[self.counter])
