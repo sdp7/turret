@@ -19,19 +19,23 @@ class manual_aim:
         rospy.Subscriber("manualServer", Float32MultiArray, self.arm_callback)
 
     def joint_callback(self,data): 
-        theta1 = data.position[3]
-        theta2 = data.position[6]
+        theta1 = data.position[2]
+        theta2 = data.position[5]
 
         self.current_pos = [theta1, theta2]
 
     def arm_callback(self,data):
-        base_velocity = data.data[0]
-        turret_velocity = data.data[1]
+        base_velocity = data.data[2]
+        turret_velocity = data.data[3]
         dt = 1 / self.manual_server_rate
 
         displacement_base = base_velocity * dt
-        displacement_turret = turret_velocity * dt
-        
+        displacement_turret = turret_velocity * dt 
+
+        print(self.current_pos[0])
+        print(self.current_pos[1])
+
+
         base_angle = self.current_pos[0] - displacement_base
         turret_angle = self.current_pos[1] - displacement_turret
 
