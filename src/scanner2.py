@@ -3,7 +3,7 @@ import rospy
 import math
 import numpy as np
 from sensor_msgs.msg import JointState 
-from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Float64MultiArray, Bool
 from std_msgs.msg import Bool
 from time import time, sleep
 
@@ -12,16 +12,16 @@ from time import time, sleep
 # processes the data from the ROSTopic named "joint_states"
 class scan:
     def __init__(self):
-        rospy.init_node('scan_arm',anonymous=True)
-        self.rate = rospy.Rate(10)
-        self.intervals = 50
+        rospy.init_node('scan_arm_real',anonymous=True)
+        self.rate = rospy.Rate(2)
+        self.intervals = 35
         self.counter = 0
         self.half_scan_done = False
         self.trajectory = self.generate_trajectory()
         self.half_trajectory = self.generate_half_trajectory()
         self.jointpub = rospy.Publisher('joint_trajectory_point',Float64MultiArray, queue_size =10)
         self.joint_pos = Float64MultiArray() 
-        rospy.Subscriber("isFire", Float64MultiArray, self.scan_callback)
+        rospy.Subscriber("isFire", Bool, self.scan_callback)
         
         #rospy.Subscriber("fire_tester", Bool, self.scan_callback)
 
@@ -32,11 +32,13 @@ class scan:
         print("----------")
 
     def scan_callback(self,fire_data):
-        if len(fire_data.data) == 0:
-            is_fire = False
-        else: 
-            is_fire = True
-            exit()
+        # if len(fire_data.data) == 0:
+        #     is_fire = False
+        # else: 
+        #     is_fire = True
+        #     exit()
+
+        is_fire = fire_data.data
 
         # scan half pi
         if not(self.half_scan_done or is_fire):

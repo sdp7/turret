@@ -41,11 +41,8 @@ class scan:
         # slop = delay in sec in messages is syncesd
         self.joint_sync = message_filters.ApproximateTimeSynchronizer(self.sub_list, queue_size=10, slop = sl, allow_headerless=True)
         self.joint_sync.registerCallback(self.detect_callback)
-<<<<<<< HEAD
         
         # rospy.Subscriber("isFire", Bool, self.scan_callback)
-=======
->>>>>>> demo3
 
     def joint_callback(self,data): 
         print("Msg: {}".format(data.header)) 

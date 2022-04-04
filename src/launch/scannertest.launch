@@ -1,12 +1,12 @@
 <launch>
   <node 
-    pkg="turret" 
-    type="publisher_test.py" 
-    name="publisher">
+    pkg="vision" 
+    type="isFire.py" 
+    name="isFire">
   </node>
   <node 
     pkg="turret" 
-    type="scanner.py" 
-    name="scanner">
+    type="scanner2.py" 
+    name="scan_arm_real">
   </node>
 </launch>
