@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import math
 import numpy as np
@@ -10,8 +10,8 @@ from time import time, sleep
 class manual_aim:
     def __init__(self):
         rospy.init_node('move_arm',anonymous=True)
-        self.manual_server_rate = 10
-        self.rate = rospy.Rate(10)
+        self.manual_server_rate = 20
+        self.rate = rospy.Rate(self.manual_server_rate)
         self.jointpub = rospy.Publisher('joint_trajectory_point',Float64MultiArray, queue_size =10)    
         self.joint_pos = Float64MultiArray()
         self.current_pos = []
@@ -30,14 +30,11 @@ class manual_aim:
         dt = 1 / self.manual_server_rate
 
         displacement_base = base_velocity * dt
-        displacement_turret = turret_velocity * dt 
-
-        print(self.current_pos[0])
-        print(self.current_pos[1])
-
-
-        base_angle = self.current_pos[0] - displacement_base
-        turret_angle = self.current_pos[1] - displacement_turret
+        displacement_turret = turret_velocity * dt
+        
+   
+        base_angle = self.current_pos[0] + displacement_base
+        turret_angle = self.current_pos[1] + displacement_turret
 
         self.move_arm(base_angle, turret_angle)
     
@@ -54,7 +51,8 @@ class manual_aim:
         #Joint Position vector should contain 6 elements:
         #[0, shoulder1, shoulder2, elbow, wrist, gripper]
 
-        self.joint_pos.data = self.clean_joint_states([0, base_angle, 1.57, -1.47, turret_angle, 0])
+        #self.joint_pos.data = self.clean_joint_states([0, base_angle, 1.57, -1.47, turret_angle, 0])
+        self.joint_pos.data = [0, base_angle, 1.57, -1.47, turret_angle, 0]
         self.jointpub.publish(self.joint_pos)
 
  
