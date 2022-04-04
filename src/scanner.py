@@ -13,7 +13,6 @@ import message_filters
 # processes the data from the ROSTopic named "joint_states"
 class scan:
     def __init__(self):
-        rospy.init_node('scan_arm',anonymous=True)
         global r
         r = 50
         self.rate = rospy.Rate(r)
@@ -26,20 +25,21 @@ class scan:
         self.trajectory = self.generate_trajectory()
         self.half_trajectory = self.generate_half_trajectory()
         
-        self.jointpub = rospy.Publisher('joint_trajectory_point',Float64MultiArray, queue_size =10)
+        self.jointpub = rospy.Publisher('joint_trajectory_point',Float64MultiArray, queue_size=10)
         self.joint_pos = Float64MultiArray() 
         
-        self.fire_sub = message_filters.Subscriber("isFire", Float64MultiArray, queue_size=10)
-        self.joint_sub = message_filters.Subscriber("joint_states", JointState, queue_size=10) 
+        # self.fire_sub = message_filters.Subscriber("isFire", Float64MultiArray, queue_size=10)
+        self.joint_sub = message_filters.Subscriber("joint_states", JointState) 
+        
+        # fake fire publisher
+        self.fire_sub = rospy.Subscriber("fire_tester", Float64MultiArray, self.detect_callback)
 
         sub_list = [self.joint_sub, self.fire_sub]
 
-        # #synchronise topics for isFire and jointStates so we have the right joint angles when finding isFire, 
+        # synchronise topics for isFire and jointStates so we have the right joint angles when finding isFire, 
         # slop = delay in sec in messages is syncesd
         self.joint_sync = message_filters.ApproximateTimeSynchronizer(sub_list, queue_size=10, slop = sl, allow_headerless=True)
         self.joint_sync.registerCallback(self.detect_callback)
-
-        # rospy.Subscriber("isFire", Bool, self.scan_callback)
 
     def joint_callback(self,data): 
         print("Msg: {}".format(data.header)) 
@@ -51,7 +51,10 @@ class scan:
 
     def detect_callback(self, joint_data, fire_data):
         print('in detect_callback')
-        self.joint_callback(joint_data)
+        
+        print("Msg: {}".format(joint_data.header)) 
+        b, s, e, w, g, end = round(joint_data.position[2],3), round(joint_data.position[3],3), round(joint_data.position[4],3), round(joint_data.position[5],3), round(joint_data.position[6],3), round(joint_data.position[7],3)
+        print(f"Joint Positions: \n [Base]: {b} \n [Shoulder]: {s} ~ [Elbow]: {e}\n [Wrist]: {w} | [Gripper]: {g}\n ")
 
         is_fire = len(fire_data.data)
 
@@ -128,12 +131,16 @@ class scan:
         self.jointpub.publish(self.joint_pos)
         # self.read_joint_states()
 
- 
-#loops over the commands at 20Hz until shut down
-if __name__ == '__main__': 
+def main():
+    rospy.init_node('scanner')
     scanner = scan()
     while not rospy.is_shutdown():
         try:
             rospy.spin()
         except KeyboardInterrupt:
-            print("Shutting down")
+            print("Shutting down scanner")
+            break
+ 
+#loops over the commands at 20Hz until shut down
+if __name__ == '__main__': 
+    main()

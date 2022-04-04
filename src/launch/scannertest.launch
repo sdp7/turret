@@ -1,0 +1,12 @@
+<launch>
+  <node 
+    pkg="turret" 
+    type="publisher_test.py" 
+    name="publisher">
+  </node>
+  <node 
+    pkg="turret" 
+    type="scanner.py" 
+    name="scanner">
+  </node>
+</launch>
