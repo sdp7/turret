@@ -13,9 +13,10 @@ from time import time, sleep
 class scan:
     def __init__(self):
         rospy.init_node('scan_arm',anonymous=True)
-        self.rate = rospy.Rate(1)
-        self.intervals = 10
+        self.rate = rospy.Rate(10)
+        self.intervals = 20
         self.counter = 0
+        self.half_scan_done = False
         self.trajectory = self.generate_trajectory()
         self.jointpub = rospy.Publisher('joint_trajectory_point',Float64MultiArray, queue_size =10)
         self.joint_pos = Float64MultiArray() 
@@ -30,7 +31,19 @@ class scan:
 
     def scan_callback(self,data):
         is_fire = data.data
-        if not is_fire:
+        i = int(self.intervals/2)
+        half_scan = [math.pi*factor for factor in np.linspace(0,-1,int(self.intervals/2))]
+        half_scan.pop()
+        print(half_scan)
+        # scan half pi
+        if not self.half_scan_done:
+            for i in range(len(half_scan)):
+                if not is_fire:
+                    self.move_arm(half_scan[i])
+                if i == len(half_scan)-1:
+                    self.half_scan_done = True
+        # scan full circle
+        if not is_fire and self.half_scan_done:
             if self.counter == len(self.trajectory):
                 self.counter = 0
             self.move_arm(self.trajectory[self.counter])
@@ -40,7 +53,7 @@ class scan:
     def read_joint_states(self): 
         rospy.Subscriber("joint_states",JointState, self.joint_callback)  
     
-    # Makes sure the joints do not go outside the joint limits/break the servos
+    # makes sure the joints do not go outside the joint limits/break the servos
     def clean_joint_states(self,data): 
         lower_limits = [0, -3.5, -1.57, -1.57, -1, -1] 
         upper_limits = [0,  3.5,  1.57,  1.57,  1.57, 1] 
@@ -50,7 +63,11 @@ class scan:
 
     def generate_trajectory(self):
         clockwise_scan = [math.pi*factor for factor in np.linspace(-1,1,self.intervals)]
-        trajectory = clockwise_scan + clockwise_scan[::-1]
+        anti_clockwise = clockwise_scan[::-1]
+        clockwise_scan.pop()
+        anti_clockwise.pop()
+        trajectory = clockwise_scan + anti_clockwise
+        print(trajectory)
         return trajectory
 
     # publishes a set of joint commands to the 'joint_trajectory_point' topic
@@ -72,4 +89,3 @@ if __name__ == '__main__':
             rospy.spin()
         except KeyboardInterrupt:
             print("Shutting down")
-
