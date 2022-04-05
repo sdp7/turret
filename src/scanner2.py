@@ -48,19 +48,16 @@ class scan:
         self.scan_callback(data)
 
     def scan_callback(self, fire_data):
-        # if len(fire_data.data) == 0:
-        #     is_fire = False
-        # else: 
-        #     is_fire = True
-        #     exit()
-
-        # is_fire = fire_data.data
         is_fire = fire_data
-        scan = is_fire
-        self.statepub.publish(scan)
         
-        if is_fire:
-            sys.exit()
+        # self.scan = not is_fire
+        # self.statepub.publish(self.scan)
+        
+        if is_fire == True:
+            print("Found fire")
+            self.scan = False
+            rospy.signal_shutdown()
+            self.statepub.publish(self.scan)
 
         # scan half pi
         elif not(self.half_scan_done or is_fire):
@@ -76,6 +73,7 @@ class scan:
                 self.counter = 0
             self.move_arm(self.trajectory[self.counter])
             self.counter += 1
+        self.statepub.publish(self.scan)
 
     # listens to the "joint_states" topic and sends them to "joint_callback" for processing
     def read_joint_states(self): 
@@ -117,8 +115,9 @@ class scan:
 #loops over the commands at 20Hz until shut down
 if __name__ == '__main__': 
     scanner = scan()
-    while not (rospy.is_shutdown() or scanner.scan):
+    while not rospy.is_shutdown():
         try:
             rospy.spin()
+            # if scanner.scan == False: break
         except KeyboardInterrupt:
             print("Shutting down")
