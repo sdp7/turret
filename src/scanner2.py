@@ -6,6 +6,7 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray, Bool
 from std_msgs.msg import Bool
 from time import time, sleep
+import sys
 
 # CORRECT VERSION
 
@@ -13,15 +14,23 @@ from time import time, sleep
 class scan:
     def __init__(self):
         rospy.init_node('scan_arm_real',anonymous=True)
-        self.rate = rospy.Rate(2)
-        self.intervals = 35
+        
+        self.rate = rospy.Rate(20)
+        self.stop = rospy.Rate(1)
+        self.intervals = 20
+        
         self.counter = 0
         self.half_scan_done = False
         self.trajectory = self.generate_trajectory()
         self.half_trajectory = self.generate_half_trajectory()
+        
         self.jointpub = rospy.Publisher('joint_trajectory_point',Float64MultiArray, queue_size =10)
+        self.statepub = rospy.Publisher('scan_state', Bool, queue_size =10)
+        
         self.joint_pos = Float64MultiArray() 
-        rospy.Subscriber("isFire", Bool, self.scan_callback)
+        self.scan = True
+        
+        rospy.Subscriber("isFire", Bool, self.read_fire_callback)
         
         #rospy.Subscriber("fire_tester", Bool, self.scan_callback)
 
@@ -30,23 +39,37 @@ class scan:
         print("Wheel Positions:\n\tLeft: {0:.2f}rad\n\tRight: {0:.2f}rad\n\n".format(data.position[0],data.position[1])) 
         print("Joint Positions:\n\tShoulder1: {0:.2f}rad\n\tShoulder2: {0:.2f}rad\n\tElbow: {0:.2f}rad\n\tWrist: {0:.2f}rad\n\n".format(data.position[2],data.position[3],data.position[4],data.position[5])) 
         print("----------")
+    
+    # listens to the "joint_states" topic and sends them to "joint_callback" for processing
+    def read_fire_callback(self, fire_data): 
+        # rospy.Subscriber("isFire", Bool)  
+        self.stop.sleep()
+        data = fire_data.data
+        self.scan_callback(data)
 
-    def scan_callback(self,fire_data):
+    def scan_callback(self, fire_data):
         # if len(fire_data.data) == 0:
         #     is_fire = False
         # else: 
         #     is_fire = True
         #     exit()
 
-        is_fire = fire_data.data
+        # is_fire = fire_data.data
+        is_fire = fire_data
+        scan = is_fire
+        self.statepub.publish(scan)
+        
+        if is_fire:
+            sys.exit()
 
         # scan half pi
-        if not(self.half_scan_done or is_fire):
+        elif not(self.half_scan_done or is_fire):
             self.move_arm(self.half_trajectory[self.counter])
             self.counter += 1
             if self.counter == len(self.half_trajectory):
                 self.counter = 0
                 self.half_scan_done = True
+            
         # scan full circle
         if (not is_fire) and self.half_scan_done:
             if self.counter == len(self.trajectory):
@@ -94,7 +117,7 @@ class scan:
 #loops over the commands at 20Hz until shut down
 if __name__ == '__main__': 
     scanner = scan()
-    while not rospy.is_shutdown():
+    while not (rospy.is_shutdown() or scanner.scan):
         try:
             rospy.spin()
         except KeyboardInterrupt:

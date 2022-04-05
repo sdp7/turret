@@ -19,7 +19,7 @@ class scan:
         global sl
         sl = 1/r
         
-        self.intervals = 40
+        self.intervals = 20
         self.counter = 0
         self.half_scan_done = False
         
