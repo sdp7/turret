@@ -1,9 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy 
 from numpy import maximum,minimum 
 from sensor_msgs.msg import JointState 
-from std_msgs.msg import Float64MultiArray 
+from std_msgs.msg import Float64MultiArray, Bool
 from time import time, sleep 
+import sys
 
 class armMover():
     def __init__(self):
@@ -16,11 +17,11 @@ class armMover():
 
     # processes the data from the ROSTopic named "joint_states"
     def joint_callback(self,data): 
-        print("Msg: {}".format(data.header.seq)) 
-        print("Wheel Positions:\n\tLeft: {0:.2f}rad\n\tRight: {0:.2f}rad\n\n".format(data.position[0],data.position[1])) 
+        # print("Msg: {}".format(data.header.seq)) 
+        # print("Wheel Positions:\n\tLeft: {0:.2f}rad\n\tRight: {0:.2f}rad\n\n".format(data.position[0],data.position[1])) 
         print("Joint Positions:\n\tShoulder1: {0:.2f}rad\n\tShoulder2: {0:.2f}rad\n\tElbow: {0:.2f}rad\n\tWrist: {0:.2f}rad\n\n".format(data.position[2],data.position[3],data.position[4],data.position[5])) 
-        print("Gripper Position:\n\tGripper: {0:.2f}rad\n".format(data.position[6])) 
-        print("----------") 
+        # print("Gripper Position:\n\tGripper: {0:.2f}rad\n".format(data.position[6])) 
+        # print("----------") 
     
     # listens to the "joint_states" topic and sends them to "joint_callback" for processing
     def read_joint_states(self): 
@@ -40,15 +41,18 @@ class armMover():
         #[0, shoulder1, shoulder2, elbow, wrist, gripper]
         self.joint_pos.data = self.clean_joint_states([0, angle,  1.57, -1.47, 0, 0]) 
         self.jointpub.publish(self.joint_pos) 
-        # self.read_joint_states() 
+        self.read_joint_states() 
  
 #loops over the commands at 10Hz until shut down
 if __name__ == '__main__': 
     num = 0
     am = armMover()
-    goals = [0.0]
+
+    statepub = rospy.Publisher('moved_arm', Bool, queue_size =10)
+    statepub.publish(False) 
+    goals = [0.0] * 10
     while not rospy.is_shutdown(): 
         for goal in goals:
             am.move_arm(goal) 
-            am.rate.sleep() 
-        exit()
+            # am.rate.sleep() 
+        sys.exit()

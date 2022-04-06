@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import math
 import numpy as np
@@ -13,7 +13,7 @@ from time import time, sleep
 class scan:
     def __init__(self):
         rospy.init_node('scan_arm',anonymous=True)
-        self.rate = rospy.Rate(10)
+        self.rate = rospy.Rate(2)
         self.intervals = 20
         self.counter = 0
         self.half_scan_done = False
@@ -21,7 +21,7 @@ class scan:
         self.jointpub = rospy.Publisher('joint_trajectory_point',Float64MultiArray, queue_size =10)
         self.joint_pos = Float64MultiArray() 
         #rospy.Subscriber("fire_detection", Float64MultiArray, self.detect_callback)
-        rospy.Subscriber("fire_tester", Bool, self.scan_callback)
+        rospy.Subscriber("isFire", Bool, self.scan_callback)
 
     def joint_callback(self,data): 
         print("Msg: {}".format(data.header.seq)) 
@@ -34,7 +34,7 @@ class scan:
         i = int(self.intervals/2)
         half_scan = [math.pi*factor for factor in np.linspace(0,-1,int(self.intervals/2))]
         half_scan.pop()
-        print(half_scan)
+    
         # scan half pi
         if not self.half_scan_done:
             for i in range(len(half_scan)):
@@ -43,11 +43,13 @@ class scan:
                 if i == len(half_scan)-1:
                     self.half_scan_done = True
         # scan full circle
-        if not is_fire and self.half_scan_done:
+        elif not is_fire and self.half_scan_done:
             if self.counter == len(self.trajectory):
                 self.counter = 0
             self.move_arm(self.trajectory[self.counter])
             self.counter += 1
+        else:
+            exit()
     
     # listens to the "joint_states" topic and sends them to "joint_callback" for processing
     def read_joint_states(self): 
@@ -67,7 +69,6 @@ class scan:
         clockwise_scan.pop()
         anti_clockwise.pop()
         trajectory = clockwise_scan + anti_clockwise
-        print(trajectory)
         return trajectory
 
     # publishes a set of joint commands to the 'joint_trajectory_point' topic
