@@ -52,13 +52,9 @@ class aim:
         return (x_meter, y_meter, z_meter)
 
     def ball_callback(self,data):
-
-
-        x_ = 1
-        y_ = -data.data[1]
-        z_ = data.data[2]
-
-        coordinates = to3D(self, x_, y_, z_, 1)
+        x = data.data[0]
+        y = -data.data[1]
+        z = data.data[2]
 
         fire_position = (x,y,z)
         self.move_arm(fire_position)
@@ -112,7 +108,6 @@ class aim:
         turret_angle = angles[1]
 
         self.joint_pos.data = self.clean_joint_states([0, base_angle, 1.57, -1.47, turret_angle, 0])
-        #print("joint pos data", self.joint_pos.data)
         self.jointpub.publish(self.joint_pos)
 
  
