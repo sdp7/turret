@@ -104,7 +104,8 @@ class aim:
         # height
         h = z
 
-        turret_angle = math.atan2(v**2 - math.sqrt(v**4 - g * (g * d**2 + 2 * v**2 * h)), g * d) + self.current_pos[1]
+        #turret_angle = math.atan2(v**2 - math.sqrt(v**4 - g * (g * d**2 + 2 * v**2 * h)), g * d) + self.current_pos[1]
+        turret_angle = math.atan2(h,d) + self.current_pos[1]
 
         return (base_angle, turret_angle)
     
