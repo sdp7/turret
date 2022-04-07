@@ -29,8 +29,8 @@ class manual_aim:
         turret_velocity = data.data[3]
         dt = 1 / self.manual_server_rate
 
-        displacement_base = base_velocity * dt
-        displacement_turret = turret_velocity * dt
+        displacement_base = 5 *(base_velocity * dt)
+        displacement_turret = 5 * (turret_velocity * dt)
         
    
         base_angle = self.current_pos[0] + displacement_base

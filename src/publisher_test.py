@@ -1,6 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 from std_msgs.msg import Bool, Float64MultiArray
+
+
+# def talker():
+#     pub = rospy.Publisher('isFire', Bool, queue_size=10)
+#     rospy.init_node('publisher', anonymous=True)
+#     rate = rospy.Rate(2)
 
 class talker():
     def __init__(self):

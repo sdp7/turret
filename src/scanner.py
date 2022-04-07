@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import math
 import numpy as np
@@ -15,7 +15,9 @@ class scan:
     def __init__(self):
         rospy.init_node('scan_arm_real',anonymous=True)
         self.rate = rospy.Rate(20)
+
         self.stop = rospy.Rate(.5)
+
         self.intervals = 20
         
         self.counter = 0
@@ -105,8 +107,6 @@ class scan:
         self.joint_pos.data = self.clean_joint_states([0, angle, 1.57, -1.47, 0, 0])
         self.jointpub.publish(self.joint_pos)
         self.stop.sleep()
-        # self.read_joint_states()
-
 
 #loops over the commands at 20Hz until shut down
 if __name__ == '__main__': 
@@ -126,4 +126,6 @@ if __name__ == '__main__':
             print("Shutting down")
     statepub.publish(False) 
     print("Shutting scanning down")
+
     sys.exit(0)
+
