@@ -10,7 +10,7 @@ from time import time, sleep
 class aim:
     def __init__(self):
         rospy.init_node('move_arm',anonymous=True)
-        self.rate = rospy.Rate(10)
+        self.rate = rospy.Rate(20)
         self.jointpub = rospy.Publisher('joint_trajectory_point',Float64MultiArray, queue_size =10)    
         self.joint_pos = Float64MultiArray() 
         rospy.Subscriber("ball_position", Float64MultiArray, self.ball_callback)

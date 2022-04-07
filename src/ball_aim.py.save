@@ -4,7 +4,7 @@ import math
 import numpy as np
 from sensor_msgs.msg import JointState 
 from std_msgs.msg import Float64MultiArray, Float64
-from armMover import *
+
 
 base_to_turret = 0.13 # 130.0 mm
 turret_to_camera = 0.05 # 50 mm
@@ -14,24 +14,7 @@ camera_to_base_forward = 0.055 # 55 mm
 
 camera_to_frame_x = 0.07
 camera_to_frame_z = -0.1
-
-
-def move_arm_back():
-    print("mving arm back now")
-    am = armMover()
-    
-    goals = [0.0] * 10
-    try:
-        for goal in goals:
-                am.move_arm(goal) 
-                am.rate.sleep() 
-    except KeyboardInterrupt:
-            print("Shutting down")
-            
-    # statepub.publish(True) 
-    # sys.exit()
-
-
+ 
 # processes the data from the ROSTopic named "joint_states"
 class aim:
     def __init__(self):
@@ -43,10 +26,9 @@ class aim:
         self.depth = 0
         rospy.Subscriber("ball_position", Float64MultiArray, self.ball_callback)
         rospy.Subscriber("joint_states",JointState, self.joint_callback)
-        in_config = Float64MultiArray()
-        self.joint_pos.data = [0, 0, 1.57, -1.47, 0, 0]
-        self.jointpub.publish(self.joint_pos)
-        print("Gone compact")
+        initial_config = Float64MultiArray()
+        initial_config.data = [0, base_angle, 1.57, 0, turret_angle, 0]
+        self.jointpub.publish([0, 0, 1.57, -1.47, 0, 0])
 
     def joint_callback(self,data):
         base_angle = data.position[2]
@@ -75,7 +57,7 @@ class aim:
 
             fire_position = (x,y,z)
             self.move_arm(fire_position)
-        #self.rate.sleep()
+        self.rate.sleep()
 
     def rotate_around_z(x, y, z, theta):
         sin = np.sin(theta)
@@ -96,7 +78,7 @@ class aim:
         base_angle = math.atan2(y,x) + self.current_pos[0]
 
         # velocity of ejection
-        v = 100000000
+        v = 5
         # gravity constant
         g = 9.81
         # displacement horizontal
@@ -132,7 +114,7 @@ class aim:
 #loops over the commands at 20Hz until shut down
 if __name__ == '__main__': 
     aimer = aim()
-    move_arm_back()
+
     while not rospy.is_shutdown():
         try:
             rospy.spin()
