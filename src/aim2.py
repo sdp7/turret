@@ -32,7 +32,7 @@ class aim:
 
         x = data.data[0] + camera_to_frame_x
         y = -data.data[1]
-        z = data.data[2] + camera_to_frame_x
+        z = data.data[2] + camera_to_frame_z
 
         ball_position = (x,y,z)
         #print(ball_position)
@@ -81,7 +81,7 @@ class aim:
         base_angle = math.atan2(y,x)
 
         # velocity of ejection
-        v = 5
+        v = 10000000
         # gravity constant
         g = 9.81
         # displacement horizontal
